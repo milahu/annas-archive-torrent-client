@@ -26,7 +26,7 @@ python3 -m cas_torrent --port 6882 magnet:?xt=urn:btih:1234567890123456789012345
 
 all complete files are stored in the sha256 store.
 sha256 is the most common file hash,
-more common than the bt2r hash (bittorrent v2 merkle root hash, see `def get_bt2_root_hash_of_path(file_path)`).
+more common than the bt2r hash (bittorrent v2 merkle root hash, see `def get_bt2_root_hash_of_path(file_path)` in [src/cas_torrent/cas_torrent.py](src/cas_torrent/cas_torrent.py)).
 storing files by their sha256 hash allows sharing these files with other apps.
 
 ```
