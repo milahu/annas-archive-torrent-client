@@ -8,6 +8,8 @@ avoid overwriting files with same path but different content
 
 proof of concept for qBittorrent issue: [4.2.5 overwrites files if file names are the same](https://github.com/qbittorrent/qBittorrent/issues/12842)
 
+similar issue: [Never silently overwrite existing files](https://github.com/qbittorrent/qBittorrent/issues/127)
+
 ## example use
 
 load torrent file
