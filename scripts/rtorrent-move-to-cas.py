@@ -149,8 +149,13 @@ def main():
             subprocess.run(args)
         else:
             print("dst exists", dst)
-        r.d.directory_base.set(btih, dst)
-        #r.d.directory.set(btih, dst) # ?
+
+        # set new path
+        # no. this would save single-file torrents to cas/btih/single-file.txt
+        # but we want cas/btih/{btih}/single-file.txt
+        #r.d.directory_base.set(btih, dst)
+        r.d.directory.set(btih, dst)
+
         # verify
         # TODO rtorrent: whats the difference between d.directory_base and d.directory
         dst2 = r.d.directory_base(btih)
