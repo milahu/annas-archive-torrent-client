@@ -68,23 +68,48 @@ with qbittorrentapi.Client(**conn_info) as qbt_client:
         if not torrent.state in finished_states:
             continue
 
+        assert torrent.content_path.startswith(torrent.save_path)
+
         # usually, save_path is the parent directory of content_path
+        # for single-file in single-directory torrents
+        #   content_path is file_path
+        #   save_path is dirname(directory_path)
         src = torrent.save_path
         src2 = torrent.content_path
 
-        if src.startswith(dst_dir + "/"):
-            continue
+        # get the actual content path
+        src2 = torrent.save_path + torrent.content_path[len(torrent.save_path):].split("/")[0]
 
-        if not src.startswith(src_dir):
-            print("unexpected src", src)
-            print("src_dir", src_dir)
+        #if os.path.dirname(torrent.content_path) + "/" != torrent.save_path:
+        if os.path.dirname(src2) + "/" != src:
+            print('FIXME dirname(src2) + "/" != src')
+            print("  src ", src)
+            print("  src2", src2)
+            sys.exit(1)
+
+        btih = torrent.info.hash
+
+        # debug
+        """
+        debug_btih = "..."
+        if btih != debug_btih:
+            continue
+        """
+
+        dst = dst_dir + "/btih/" + btih.lower()
+        dst2 = dst_dir + "/btih/" + btih.lower() + src2[len(src_dir):]
+
+        if torrent.save_path == dst + "/":
+            # nothing to do
             continue
 
         print(f"torrent {torrent.hash} {torrent.name} {torrent.state} {torrent.content_path}")
 
-        btih = torrent.info.hash
-        dst = dst_dir + "/btih/" + btih.lower()
-        dst2 = dst_dir + "/btih/" + btih.lower() + src2[len(src_dir):]
+        print("  save   ", torrent.save_path)
+        print("  src    ", src)
+        print("  dst    ", dst)
+        print("  content", torrent.content_path)
+        print("  src2   ", src2)
 
         wait_for_check = False
 
@@ -96,13 +121,6 @@ with qbittorrentapi.Client(**conn_info) as qbt_client:
 
         # move torrent files
         # https://github.com/rmartin16/qbittorrent-api/raw/main/src/qbittorrentapi/torrents.py
-        # def set_location
-        print("src", src)
-        print("src2", src2)
-        print("dst", dst)
-        print("dst2", dst2)
-        #print("dst_parent", dst_parent)
-        #torrent.set_location(dst_parent)
         torrent.set_location(dst)
 
         checking_states = (
