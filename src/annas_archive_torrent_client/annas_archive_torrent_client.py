@@ -535,47 +535,55 @@ def main():
     global store_dirs_v2
     global store_files_v2
 
-    from optparse import OptionParser
 
-    parser = OptionParser()
 
-    parser.add_option('-p', '--port', type='int', help='set listening port')
+    import argparse
 
-    parser.add_option(
-        '-i', '--listen-interface', type='string',
-        help='set interface for incoming connections', )
-
-    parser.add_option(
-        '-o', '--outgoing-interface', type='string',
-        help='set interface for outgoing connections')
-
-    parser.add_option(
-        '-d', '--max-download-rate', type='float',
-        help='the maximum download rate given in kB/s. 0 means infinite.')
-
-    parser.add_option(
-        '-u', '--max-upload-rate', type='float',
-        help='the maximum upload rate given in kB/s. 0 means infinite.')
-
-    parser.add_option(
-        '-s', '--save-path', type='string',
-        help='the path where the downloaded file/folder should be placed.')
-
-    parser.add_option(
-        '-r', '--proxy-host', type='string',
-        help='sets HTTP proxy host and port (separated by \':\')')
-
-    parser.set_defaults(
-        port=6881,
-        listen_interface='0.0.0.0',
-        outgoing_interface='',
-        max_download_rate=0,
-        max_upload_rate=0,
-        save_path='.',
-        proxy_host=''
+    parser = argparse.ArgumentParser(
+        description='bittorrent client for annas-archive'
     )
 
-    (options, args) = parser.parse_args()
+    parser.add_argument(
+        '-p', '--port', type=int, default=6881,
+        help='set listening port'
+    )
+
+    parser.add_argument(
+        '-i', '--listen-interface', type=str, default='0.0.0.0',
+        help='set interface for incoming connections'
+    )
+
+    parser.add_argument(
+        '-o', '--outgoing-interface', type=str, default='',
+        help='set interface for outgoing connections'
+    )
+
+    parser.add_argument(
+        '-d', '--max-download-rate', type=float, default=0,
+        help='the maximum download rate given in kB/s. 0 means infinite.'
+    )
+
+    parser.add_argument(
+        '-u', '--max-upload-rate', type=float, default=0,
+        help='the maximum upload rate given in kB/s. 0 means infinite.'
+    )
+
+    parser.add_argument(
+        '-s', '--save-path', type=str, default='.',
+        help='the path where the downloaded file/folder should be placed'
+    )
+
+    parser.add_argument(
+        '-r', '--proxy-host', type=str, default='',
+        help='sets HTTP proxy host and port (separated by ":")'
+    )
+
+    parser.add_argument(
+        'torrent_file',
+        nargs='*',
+    )
+
+    options = parser.parse_args()
 
     if options.port < 0 or options.port > 65525:
         options.port = 6881
@@ -618,7 +626,7 @@ def main():
     store_dirs_v2 = set()
     store_files_v2 = set()
 
-    for f in args:
+    for f in (options.torrent_file or []):
         add_torrent(ses, f, options)
 
     done_connect_peer = False
