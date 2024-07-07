@@ -123,16 +123,21 @@ def main():
 
     for btih, torrent in get_torrents().items():
         src = torrent.directory_base
-        print("torrent", torrent.info_hash, torrent.name, src)
+
+        #dst1 = r.d.directory_base(btih)
+        dst1 = r.d.directory(btih)
+
+        print("torrent", torrent.info_hash, torrent.name)
+
         if src.startswith(dst_dir + "/"):
             continue
         # note: can be equal: src == src_dir
         if not src.startswith(src_dir):
             print("unexpected src", src)
             continue
-        dst2 = r.d.directory_base(btih)
-        dst3 = r.d.directory(btih)
-        assert dst2 == dst3, f"btih {btih}: dst2 != dst3: {dst2} != {dst3}"
+
+        #dst1 = r.d.directory_base(btih)
+        dst1 = r.d.directory(btih)
 
         # must stop before move
         # https://github.com/rakshasa/rtorrent/issues/1203
@@ -157,15 +162,14 @@ def main():
         r.d.directory.set(btih, dst)
 
         # verify
-        # TODO rtorrent: whats the difference between d.directory_base and d.directory
-        dst2 = r.d.directory_base(btih)
-        dst3 = r.d.directory(btih)
+        #dst2 = r.d.directory_base(btih)
+        dst2 = r.d.directory(btih)
         print("src", src)
         print("dst", dst)
+        #print("dst2", dst2)
         print("dst2", dst2)
-        print("dst3", dst3)
+        #assert src != dst2, f"btih {btih}: src == dst2: {src} == {dst2}"
         assert src != dst2, f"btih {btih}: src == dst2: {src} == {dst2}"
-        assert src != dst3, f"btih {btih}: src == dst3: {src} == {dst3}"
 
         # delete duplicate files
         args = ["find", src, "-type", "f", "-links", "+1", "-delete"]
