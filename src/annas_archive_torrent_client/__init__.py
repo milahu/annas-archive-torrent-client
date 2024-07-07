@@ -1,1 +1,1 @@
-from .cas_torrent import *
+from .annas_archive_torrent_client import *
