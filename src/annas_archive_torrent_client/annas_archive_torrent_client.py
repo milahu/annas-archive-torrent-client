@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 
-# cas_torrent
+# annas_archive_torrent_client
 
 # a bittorrent client with content-addressed storage
 # download and upload torrents to/from a CAS filesystem
@@ -30,7 +30,7 @@ from . import torrent_parser
 
 # also in setup.py
 # FIXME single source
-cas_torrent_version = "0.0.1"
+annas_archive_torrent_client_version = "0.0.1"
 
 
 def add_suffix(val):
@@ -589,7 +589,7 @@ def main():
         options.max_download_rate = -1
 
     settings = {
-        'user_agent': f'cas_torrent/{cas_torrent_version} libtorrent/{lt.__version__}',
+        'user_agent': f'annas_archive_torrent_client/{annas_archive_torrent_client_version} libtorrent/{lt.__version__}',
         'listen_interfaces': '%s:%d' % (options.listen_interface, options.port),
         'download_rate_limit': int(options.max_download_rate),
         'upload_rate_limit': int(options.max_upload_rate),
