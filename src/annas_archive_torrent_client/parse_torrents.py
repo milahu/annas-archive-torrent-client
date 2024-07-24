@@ -1,6 +1,12 @@
 #!/usr/bin/env python3
 
-# find . | shuf -n20 | grep -m10 '\.torrent$' | while read t; do echo "$t"; torrenttools show files "$t" | head -n5 | sed 's/^/    /' ; done
+# TODO download torrents.json to f"{cache_dir}/torrents.json"
+# TODO download all torrents to f"{cache_dir}/torrents/"
+#   first download "torrent of torrents"
+#     https://software.annas-archive.se/AnnaArchivist/annas-archive/-/issues/179
+#     example: 5709 torrents with 2.1GiB
+#     magnet:?xt=urn:btih:062811c31823bc800fe3e6a2e1e60fd5673c83a5&dn=annas-torrents
+#   then download missing torrents from the urls in torrents.json
 
 """
 todo query
@@ -61,37 +67,6 @@ if not db_has_table(db_cur, "torrents"):
     )
     db_cur.execute(query)
 
-
-# FIXME sqlite3.IntegrityError: UNIQUE constraint failed: files.md5_bytes
-# sql one to many mapping non-unique key
-# https://www.geeksforgeeks.org/relationships-in-sql-one-to-one-one-to-many-many-to-many/
-# Many-to-Many Relationship
-# many to many
-# https://www.sqlite.org/foreignkeys.html
-# https://stackoverflow.com/questions/14227468/in-sqlite-how-to-implement-a-many-to-many-relationship
-
-"""
-CREATE TABLE students (
-    student_id INT PRIMARY KEY,
-    student_name VARCHAR(50));
-CREATE TABLE courses (
-    course_id INT PRIMARY KEY,
-    course_name VARCHAR(50));
-CREATE TABLE student_courses (
-    student_id INT,
-    course_id INT,
-    PRIMARY KEY (student_id, course_id),
-    FOREIGN KEY (student_id) REFERENCES students(student_id),
-    FOREIGN KEY (course_id) REFERENCES courses(course_id));
-
-CREATE TABLE "LESSONS"
-(
-    "LESSONID"  INTEGER PRIMARY KEY NOT NULL,
-    "MODULEID"  INTEGER REFERENCES MODULES(MODULEID),
-    "STUDENTID" INTEGER REFERENCES STUDENTS(STUDENTID)
-);
-"""
-
 if not db_has_table(db_cur, "files_torrents"):
     query = (
         "CREATE TABLE files_torrents (\n"
@@ -119,14 +94,6 @@ if 1:
                 parts = line.split(" ")
                 torrent_basename = parts[1]
                 done_torrent_files.add(torrent_basename)
-
-# no. waste of memory
-"""
-torrent_id_of_btih = dict()
-query = "SELECT id, btih_bytes from torrents"
-for (id, btih_bytes) in db_cur.execute(query):
-    torrent_id_of_btih[btih_bytes] = id
-"""
 
 def add_torrent(btih_bytes):
     query = "INSERT INTO torrents (btih_bytes) VALUES (?)"
@@ -193,6 +160,8 @@ t1 = None
 # TODO filter torrents with torrents.json
 # ignore ...
 #   "group_name": "aa_derived_mirror_metadata"
+#   comics, magazines, papers, metadata
+# TODO refactor with annas_archive_torrent_client.py
 
 for torrent_file in glob.glob(f"{cache_dir}/torrents/**/*.torrent", recursive=True):
 

@@ -17,6 +17,9 @@ import hashlib
 import math
 
 import libtorrent as lt
+import watchdog
+import watchdog.events
+import watchdog.observers
 
 #import binascii
 #import json
@@ -526,6 +529,20 @@ def get_sha256_of_path(file_path, chunk_size=8192):
     return hash.digest()
 
 
+class WatchdogHandler(watchdog.events.FileSystemEventHandler):
+    def __init__(self, handle_new_file):
+        self.handle_new_file = handle_new_file
+        super().__init__()
+    def dispatch(self, event):
+        print("WatchdogHandler dispatch event", event)
+        events = (
+            watchdog.events.FileCreatedEvent,
+            watchdog.events.FileModifiedEvent,
+        )
+        if isinstance(event, events):
+            self.handle_new_file(event.src_path)
+
+
 def main():
 
     # global state
@@ -579,6 +596,13 @@ def main():
     )
 
     parser.add_argument(
+        '--requests-watch-dir', type=str,
+        action="append",
+        dest='requests_watch_dirs',
+        help='directory to watch for request.txt files'
+    )
+
+    parser.add_argument(
         'torrent_file',
         nargs='*',
     )
@@ -629,7 +653,206 @@ def main():
     for f in (options.torrent_file or []):
         add_torrent(ses, f, options)
 
+    child_threads = []
+
+    sys.path.append(os.path.dirname(__file__) + "/annas-py")
+    import annas_py
+
+    annas_torrents_json_url = "https://annas-archive.org/dyn/torrents.json"
+
+    annas_torrents_json_path = os.environ["HOME"] + "/.cache/annas-archive/torrents.json"
+
+    cache_dt_max = 60*60*24*10 # 10 days
+
+    import requests
+    import json
+    import re
+
+    def needs_update(path):
+        if not os.path.exists(path):
+            return True
+        t1 = os.path.getmtime(path)
+        t2 = time.time()
+        dt = t2 - t1
+        return dt > cache_dt_max
+
+    requests_session = requests.Session()
+
+    if needs_update(annas_torrents_json_path):
+        print("writing", annas_torrents_json_path)
+        response = requests_session.get(annas_torrents_json_url)
+        os.makedirs(os.path.dirname(annas_torrents_json_path), exist_ok=True)
+        with open(annas_torrents_json_path, "wb") as f:
+            f.write(response.content)
+
+    # download non-metadata torrent files
+    print("downloading torrent files ...")
+    with open(annas_torrents_json_path) as f:
+        annas_torrents = json.load(f)
+
+    for torrent in annas_torrents:
+
+        if torrent["is_metadata"]:
+            continue
+
+        if torrent["obsolete"]:
+            continue
+
+        # ignore comic books
+        if torrent["group_name"] == "libgen_li_comics":
+            continue
+
+        # ignore fiction books
+        if torrent["group_name"] in ("libgen_li_fic", "libgen_rs_fic"):
+            continue
+
+        # ignore magazines
+        if torrent["group_name"] == "libgen_li_magazines":
+            continue
+
+        # ignore science papers
+        if torrent["group_name"] == "scihub":
+            continue
+
+        # ignore metadata with torrent["is_metadata"] == False
+        if torrent["group_name"] == "aa_derived_mirror_metadata":
+            continue
+
+        old_torrent_path = None
+
+        """
+        # migrate
+        old_torrent_path = os.path.join(
+            os.environ["HOME"],
+            ".cache/annas-archive/torrents",
+            torrent["top_level_group_name"],
+            torrent["group_name"],
+            torrent["display_name"],
+        )
+
+        # migrate
+        old_torrent_path = os.path.join(
+            os.environ["HOME"],
+            ".cache/annas-archive/torrents",
+            re.sub("^https?://", "", torrent["url"]),
+            #torrent["top_level_group_name"],
+            #torrent["group_name"],
+            #torrent["display_name"],
+        )
+        """
+
+        torrent_path = os.path.join(
+            os.environ["HOME"],
+            ".cache/annas-archive/torrents",
+            re.sub("^annas-archive.org/dyn/small_file/torrents/", "",
+                re.sub("^https?://", "", torrent["url"])
+            ),
+            #torrent["top_level_group_name"],
+            #torrent["group_name"],
+            #torrent["display_name"],
+        )
+
+        expected_size = torrent["torrent_size"]
+
+        if old_torrent_path:
+            # migrate
+            if os.path.exists(old_torrent_path):
+                os.makedirs(os.path.dirname(torrent_path), exist_ok=True)
+                os.rename(old_torrent_path, torrent_path)
+
+        if os.path.exists(torrent_path):
+            actual_size = os.path.getsize(torrent_path)
+            if actual_size != expected_size:
+                # file exists but has wrong size
+                os.unlink(torrent_path)
+
+        if os.path.exists(torrent_path):
+            continue
+
+        print("writing", torrent_path)
+
+        response = requests_session.get(torrent["url"])
+        os.makedirs(os.path.dirname(torrent_path), exist_ok=True)
+        with open(torrent_path, "wb") as f:
+            f.write(response.content)
+
+        actual_size = os.path.getsize(torrent_path)
+
+        if actual_size != expected_size:
+            print(f"FIXME size mismatch of torrent file {torrent_path!r}: {actual_size} != {expected_size}")
+            os.rename(torrent_path, torrent_path + ".broken")
+
+    print("downloading torrent files done")
+
+    def handle_new_file(path):
+        print("new file", path)
+        name = os.path.basename(path)
+        query = None
+        args = dict(
+            #query: str,
+            #language: Language = Language.ANY,
+            #file_type: FileType = FileType.ANY,
+            #order_by: OrderBy = OrderBy.MOST_RELEVANT,
+        )
+
+        if name == "request.txt":
+            with open(path) as f:
+                query = f.read()
+
+        #elif name in ("request.yml", "request.yaml"):
+        # TODO parse yaml file
+
+        if query is None:
+            return
+
+        results = annas_py.search(query, **args)
+
+        """
+        return SearchResult(
+            id=id,
+            title=html_unescape(title),
+            authors=html_unescape(authors),
+            file_info=file_info,
+            thumbnail=thumbnail,
+            publisher=html_unescape(publisher) if publisher else None,
+            publish_date=publish_date,
+        )
+        """
+
+        for r in results:
+            print("result", dict(
+                md5=r.id,
+                title=r.title,
+                authors=r.authors,
+                extension=r.file_info.extension,
+                size=r.file_info.size,
+                language=r.file_info.language,
+                library=r.file_info.library,
+                date=r.publish_date,
+            ))
+
+    # watch for new files
+    for watchdir in (options.requests_watch_dirs or []):
+        os.makedirs(watchdir, exist_ok=True)
+        event_handler = WatchdogHandler(handle_new_file)
+        watchdog_thread = watchdog.observers.Observer()
+        watchdog_thread.schedule(event_handler, watchdir, recursive=True)
+        watchdog_thread.start()
+        child_threads.append(watchdog_thread)
+
     done_connect_peer = False
+
+    # todo? stop child threads on exit
+    # https://stackoverflow.com/questions/1635080/terminate-a-multi-thread-python-program
+    """
+    try:
+        while True:
+            time.sleep(1)
+    finally:
+        for thread in child_threads:
+            thread.stop()
+            thread.join()
+    """
 
     alive = True
     while alive:
