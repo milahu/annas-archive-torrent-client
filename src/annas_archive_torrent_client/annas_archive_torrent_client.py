@@ -142,6 +142,7 @@ def symlink_las_cas(file_las_path, file_cas_path_list):
     create_relative_symlink(file_cas_path, file_las_path)
 
 
+
 def add_torrent(ses, filename, options):
     atp = lt.add_torrent_params()
 
@@ -229,6 +230,7 @@ def add_torrent(ses, filename, options):
         # https://github.com/arvidn/libtorrent/issues/2239 # get metadata info without downloading the complete file
         # https://github.com/snowyu/libtorrent/issues/650 # Pause after downloading metadata
         atp.flag_auto_managed = False
+        # https://gist.github.com/johncf/f1606e33562b51f67aa53ffdddf2183c
         atp.file_priorities = [0] * 1000 # TODO remove?
         atp.upload_mode = True
         atp.paused = False

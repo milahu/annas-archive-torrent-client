@@ -8,6 +8,7 @@ in
 
 pkgs.mkShell {
   buildInputs = with pkgs; [
+    btfs
     (python3.withPackages (pp: with pp; [
       #qbittorrent-api
       #rtorrent-rpc
