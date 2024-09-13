@@ -1,3 +1,42 @@
+# annas-archive-torrent-client
+
+
+
+## why
+
+because i hate captchas (because i hate rate-limiting in general)
+
+> annas-archive.org
+>
+> Verifying you are human. This may take a few seconds.
+>
+> annas-archive.org needs to review the security of your connection before proceeding.
+
+"a few seconds"? no, that shit just hangs forever.
+
+https://old.reddit.com/r/CloudFlare/comments/x3m0ti/checking_if_the_site_connection_is_secure_page/
+
+> The bot check is a feature that is essentially disabled by default. I've never gotten a bot check on any of my Cloudflare websites because I don't have it enabled. It's just a feature of the proxy. Sites that have it set to a high setting usually do so because they're frequently under attack or being crawled very fast. But it isn't Cloudflare just doing it randomly - it's people choosing to enable it on their sites.
+
+seems like annas-archive.org have enabled the "anti bot" feature of cloudflare... idiots. hate them.
+
+
+
+## hate annas-archive
+
+the idiot-maintainer of annas-archive hates my idea so much that he
+[censored multiple of my gitlab issues](http://it7otdanqu7ktntxzm427cba6i53w6wlanlh23v5i3siqmos47pzhvyd.onion/milahu/hate-maintainers/src/branch/main/hate-annas-archive),
+calling me a "spammer".
+so much for "anti censorship" and "open access"...
+nah, that guy is greedy for money from donations,
+aka "passive income", aka "let some idiots work for me"
+
+
+
+---
+
+
+
 # cas_torrent
 
 a bittorrent client with content-addressed storage
