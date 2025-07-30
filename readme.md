@@ -33,6 +33,27 @@ aka "passive income", aka "let some idiots work for me"
 
 
 
+## related
+
+- https://annas-archive.org/faq#torrents
+- [Allow downloading of individual files over bittorrent](https://software.annas-archive.li/AnnaArchivist/annas-archive/-/issues/219)
+- [Generate byte offsets in packed torrents](https://software.annas-archive.li/AnnaArchivist/annas-archive/-/issues/279)
+- https://annas-archive.org/torrents#aa_derived_mirror_metadata - 1.3 TB metadata
+  - codes_benc - 100 MB
+  - elasticsearch - 120 GB
+  - elasticsearchaux - 600 GB
+  - mariadb - 500 GB
+- https://annas-archive.org/torrents#other_metadata
+  - torrents_byteoffsets_records - 4.5 GB
+    - [torrents_byteoffsets_parse_jsonl_zst.py](https://github.com/milahu/annas-archive/blob/main/scrapes/torrents_byteoffsets_parse_jsonl_zst.py)
+- https://annas-archive.org/datasets/zlib
+- https://annas-archive.org/blog/annas-archive-containers.html - aac, aacid
+  - {shortuuid}: a UUID but compressed to ASCII, e.g. using base57. We currently use the [shortuuid](https://github.com/skorokithakis/shortuuid/) Python library.
+    - example shortuuid: `URsJNGy5CjokTsNT6hUmmj` in base57 = `014005a7f5b7a5ae8bba608bf2467c543e` in base16 (34 chars)
+    - example md5: `912ec803b2ce49e4a541068d495ab570` in base16 (32 chars)
+
+
+
 ---
 
 
