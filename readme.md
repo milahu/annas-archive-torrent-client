@@ -2,6 +2,12 @@
 
 
 
+## status
+
+concept. not implemented. not usable
+
+
+
 ## why
 
 because i hate captchas (because i hate rate-limiting in general)
